@@ -75,17 +75,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('email_not_confirmed')) {
+        return { error: 'Поштаңызды растаңыз. Жіберілген хатты тексеріңіз.' };
+      }
+      if (msg.includes('invalid login credentials')) {
+        return { error: 'Электронды пошта немесе құпия сөз қате.' };
+      }
+      return { error: error.message ?? 'Күтпеген қате орын алды' };
+    }
+    return { error: null };
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, displayName: string) => {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return { error: error.message };
     if (data.user) {
-      await supabase.from('profiles').insert({
+      const { error: profileError } = await supabase.from('profiles').insert({
         id: data.user.id,
         display_name: displayName,
       });
+      if (profileError) {
+        return { error: `Profile creation failed: ${profileError.message}` };
+      }
     }
     return { error: null };
   }, []);
