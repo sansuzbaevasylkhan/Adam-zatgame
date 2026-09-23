@@ -7,15 +7,15 @@ const supabase = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pemJsanBldG5odmlqeXRnd3hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDAyMDgsImV4cCI6MjA4ODMxNjIwOH0.WCtowKRg2fo4beR7lUAw-iNJGUllHrHIcfteaud8xAQ'
 );
 
-// --- Ultra Max Premium Styles (Inline) ---
+// --- Ultra Max Premium Styles ---
 const theme = {
-  bgDeep: '#0A0A0C',
-  bgSurface: '#121216',
-  bgElevated: '#1C1C24',
+  bgDeep: '#050506',
+  bgSurface: '#0F0F13',
+  bgElevated: '#1A1A22',
   goldPrimary: '#D4AF37',
-  goldGlow: 'rgba(212, 175, 55, 0.3)',
+  goldGlow: 'rgba(212, 175, 55, 0.2)',
   textMain: '#FFFFFF',
-  textSecondary: '#A0A0AA',
+  textSecondary: '#8E8E93',
   borderColor: '#2A2A32',
   redAccent: '#EF4444',
 };
@@ -26,7 +26,7 @@ const styles = {
     minHeight: '100vh',
     backgroundColor: theme.bgDeep,
     color: theme.textMain,
-    fontFamily: 'Inter, sans-serif',
+    fontFamily: "'Inter', -apple-system, sans-serif",
   },
   sidebar: {
     width: '280px',
@@ -44,109 +44,118 @@ const styles = {
     marginBottom: '50px',
   },
   brandTitle: {
-    fontSize: '24px',
-    fontWeight: '800',
+    fontSize: '26px',
+    fontWeight: '900',
     color: theme.goldPrimary,
-    letterSpacing: '2px',
-    textTransform: 'uppercase',
-    margin: 0,
-  },
-  brandSubtitle: {
-    fontSize: '12px',
-    color: theme.textSecondary,
     letterSpacing: '3px',
     textTransform: 'uppercase',
-    marginTop: '5px',
+    margin: 0,
+    textShadow: `0 0 15px ${theme.goldGlow}`,
+  },
+  brandSubtitle: {
+    fontSize: '11px',
+    color: theme.textSecondary,
+    letterSpacing: '4px',
+    textTransform: 'uppercase',
+    marginTop: '8px',
   },
   navMenu: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '12px',
     flex: 1,
   },
   navItem: (active) => ({
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    padding: '14px 18px',
-    borderRadius: '12px',
+    gap: '14px',
+    padding: '16px 20px',
+    borderRadius: '14px',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     color: active ? theme.goldPrimary : theme.textSecondary,
     backgroundColor: active ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
     borderLeft: active ? `4px solid ${theme.goldPrimary}` : '4px solid transparent',
-    fontWeight: '500',
+    fontWeight: '600',
     userSelect: 'none',
   }),
   mainContent: {
     marginLeft: '280px',
     flex: 1,
-    padding: '40px',
+    padding: '60px',
     backgroundColor: theme.bgDeep,
     minHeight: '100vh',
   },
   pageHeader: {
-    marginBottom: '40px',
+    marginBottom: '50px',
+    // animation: 'fadeIn 0.5s ease-out',
   },
   pageTitle: {
-    fontSize: '32px',
-    fontWeight: '700',
+    fontSize: '42px',
+    fontWeight: '800',
     margin: 0,
     color: theme.textMain,
+    letterSpacing: '-1px',
   },
   pageSubtitle: {
     color: theme.textSecondary,
-    fontSize: '16px',
-    marginTop: '5px',
+    fontSize: '18px',
+    marginTop: '10px',
+    fontWeight: '400',
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '25px',
-    marginBottom: '40px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '30px',
+    marginBottom: '60px',
   },
   statCard: {
     backgroundColor: theme.bgSurface,
-    padding: '25px',
-    borderRadius: '20px',
+    padding: '30px',
+    borderRadius: '24px',
     border: `1px solid ${theme.borderColor}`,
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+    gap: '25px',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
   },
   statIcon: {
-    width: '60px',
-    height: '60px',
+    width: '70px',
+    height: '70px',
     backgroundColor: 'rgba(212, 175, 55, 0.1)',
-    borderRadius: '15px',
+    borderRadius: '20px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     color: theme.goldPrimary,
-    fontSize: '24px',
+    fontSize: '30px',
+    border: `1px solid ${theme.goldGlow}`,
   },
   statInfoLabel: {
     color: theme.textSecondary,
     fontSize: '14px',
     display: 'block',
-    marginBottom: '5px',
+    marginBottom: '8px',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
   },
   statInfoValue: {
-    fontSize: '28px',
+    fontSize: '36px',
     fontWeight: '800',
     color: theme.goldPrimary,
+    textShadow: `0 0 10px ${theme.goldGlow}`,
   },
   tableContainer: {
     backgroundColor: theme.bgSurface,
-    borderRadius: '20px',
+    borderRadius: '24px',
     border: `1px solid ${theme.borderColor}`,
     overflow: 'hidden',
-    boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+    boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
   },
   tableHeader: {
     backgroundColor: theme.bgElevated,
-    padding: '20px',
+    padding: '25px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -156,10 +165,12 @@ const styles = {
     backgroundColor: theme.bgDeep,
     border: `1px solid ${theme.borderColor}`,
     color: 'white',
-    padding: '10px 15px',
-    borderRadius: '10px',
-    width: '300px',
+    padding: '12px 20px',
+    borderRadius: '12px',
+    width: '350px',
     outline: 'none',
+    fontSize: '15px',
+    transition: 'border 0.3s ease',
   },
   table: {
     width: '100%',
@@ -167,31 +178,34 @@ const styles = {
     textAlign: 'left',
   },
   th: {
-    padding: '18px 20px',
+    padding: '20px',
     color: theme.goldPrimary,
     fontSize: '13px',
     textTransform: 'uppercase',
-    letterSpacing: '1px',
+    letterSpacing: '1.5px',
     borderBottom: `1px solid ${theme.borderColor}`,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    fontWeight: '700',
   },
   td: {
-    padding: '16px 20px',
+    padding: '20px',
     borderBottom: `1px solid ${theme.borderColor}`,
     color: theme.textMain,
-    fontSize: '15px',
+    fontSize: '16px',
   },
   rankBadge: (rank) => {
     let style = {
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      width: '32px',
-      height: '32px',
+      width: '36px',
+      height: '36px',
       borderRadius: '50%',
       fontWeight: 'bold',
-      marginRight: '10px',
+      marginRight: '15px',
       color: '#000',
+      fontSize: '14px',
+      boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
     };
     if (rank === 1) style.background = 'linear-gradient(45deg, #FFD700, #B8860B)';
     else if (rank === 2) style.background = 'linear-gradient(45deg, #C0C0C0, #708090)';
@@ -258,7 +272,8 @@ const UsersList = () => {
   useEffect(() => {
     async function fetchUsers() {
       const { data } = await supabase.from('profiles').select('display_name, created_at').order('created_at', { ascending: false });
-      if (data) setUsers(data);
+      if (// eslint-disable-next-line react-hooks/exhaustive-deps
+        data) setUsers(data);
     }
     fetchUsers();
   }, []);
@@ -272,7 +287,8 @@ const UsersList = () => {
     <div style={{ padding: '0' }}>
       <div style={styles.pageHeader}>
         <h2 style={styles.pageTitle}>Тіркелгендер</h2>
-        <p style={styles.pageSubtitle}>Барлық қолданушылардың тізімі</p>
+        <p style={styles.// eslint-disable-next-line react-hooks/exhaustive-deps
+          pageSubtitle}>Барлық қолданушылардың тізімі</p>
       </div>
       <div style={styles.tableContainer}>
         <div style={styles.tableHeader}>
@@ -313,7 +329,8 @@ const Ranking = () => {
       answers?.forEach(ans => { scoreMap[ans.user_id] = (scoreMap[ans.user_id] || 0) + (ans.score || 0); });
       const { data: profiles } = await supabase.from('profiles').select('id, display_name, created_at');
       if (profiles) {
-        const res = profiles.map(p => ({ ...p, total_score: scoreMap[p.id] || 0 }));
+        const res = profiles.map(p => ({ ...p, total_// eslint-disable-next-line react-hooks/exhaustive-deps
+          score: scoreMap[p.id] || 0 }));
         setRankings(res.sort((a, b) => b.total_score - a.total_score));
       }
     }
@@ -379,12 +396,12 @@ export default function AdminWeb() {
               onClick={() => setActivePage(item.id)}
             >
               <span>{item.icon}</span>
-              <span>{item.name}</span>
+              <span style={{ marginLeft: '10px' }}>{item.name}</span>
             </div>
           ))}
         </div>
         <div style={styles.logoutBtn} onClick={() => alert('Шығу...')}>
-          <span>🚪</span>
+          <span style={{ marginRight: '10px' }}>🚪</span>
           <span>Шығу</span>
         </div>
       </div>
