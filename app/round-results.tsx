@@ -49,7 +49,66 @@ export default function RoundResultsScreen() {
   const [scores, setScores] = useState<PlayerScore[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const calculateAndSaveScores = async () => {
+    const { data: roomData } = await supabase
+      .from('game_rooms')
+      .select('*')
+      .eq('id', roomId as string)
+      .single();
+
+    if (!roomData) return;
+
+    const { data: allAnswers } = await supabase
+      .from('player_answers')
+      .select('user_id, category, answer, round')
+      .eq('room_id', roomId as string)
+      .eq('round', Number(round));
+
+    if (!allAnswers) return;
+
+    const letter = (roomData.letter || '').toUpperCase();
+    const updates = [];
+
+    // Group answers by category to check for duplicates
+    const categoryGroups: Record<string, { answer: string, user_id: string }[]> = {};
+    allAnswers.forEach(ans => {
+      if (!categoryGroups[ans.category]) categoryGroups[ans.category] = [];
+      categoryGroups[ans.category].push({ answer: ans.answer.trim().toLowerCase(), user_id: ans.user_id });
+    });
+
+    allAnswers.forEach(ans => {
+      const userAnswer = ans.answer.trim();
+      const lowerAnswer = userAnswer.toLowerCase();
+      let score = 0;
+
+      // 1. Check if starts with the correct letter
+      if (userAnswer && userAnswer.toUpperCase().startsWith(letter)) {
+        // 2. Check for duplicates in the same category
+        const othersWithSameAnswer = categoryGroups[ans.category].filter(
+          a => a.answer === lowerAnswer && a.user_id !== ans.user_id
+        );
+
+        score = othersWithSameAnswer.length === 0 ? 10 : 5;
+      }
+
+      updates.push({
+        room_id: roomId,
+        round: Number(round),
+        user_id: ans.user_id,
+        category: ans.category,
+        score: score
+      });
+    });
+
+    if (updates.length > 0) {
+      await supabase.from('player_answers').upsert(updates, {
+        onConflict: 'room_id,user_id,round,category',
+      });
+    }
+  };
+
   const fetchData = useCallback(async () => {
+    // Only calculate scores if we are the host or if scores are not yet set
     const { data: roomData } = await supabase
       .from('game_rooms')
       .select('*')
@@ -57,6 +116,11 @@ export default function RoundResultsScreen() {
       .maybeSingle();
     if (!roomData) return;
     setRoom(roomData as RoomData);
+
+    // Ensure scores are calculated before fetching them
+    if (roomData.host_id === profile?.id) {
+      await calculateAndSaveScores();
+    }
 
     const { data: answerData } = await supabase
       .from('player_answers')

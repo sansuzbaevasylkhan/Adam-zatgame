@@ -1,15 +1,19 @@
 {
   "expo": {
-    "name": "adam-zat-game",
-    "slug": "bolt-expo-nativewind",
-    "version": "1.0.0",
+    "name": "Adam Zat Games",
+    "slug": "adam-zat-game",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "kz.asylkhansansuzbaev.adamzat.game",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "web": {
       "bundler": "metro",
@@ -30,12 +34,12 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "17041cd0-5bba-4be9-9065-a2edaefbb4ee"
+        "projectId": "526b69aa-d0d0-45ff-9bf2-e2c6e3fcd9b7"
       }
     },
     "android": {
       "package": "kz.asylkhansansuzbaev.adamzat.game"
     },
-    "owner": "asylkhansansuzba454478645"
+    "owner": "sansuzbaev856ghjk"
   }
 }

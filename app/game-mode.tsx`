@@ -1,0 +1,134 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Colors, Fonts, Spacing } from '@/constants/theme';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Settings, Play, Trophy } from 'lucide-react-native';
+
+const DEFAULT_CATEGORIES = ['Жануарлар', 'Қалалар', 'Жемістер', 'Кәсіптер', 'Есімдер', 'Елдер', 'Заттар', 'Тағамдар'];
+
+export default function GameModeScreen() {
+  const router = useRouter();
+  const [customCategories, setCustomCategories] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleCreateRoom = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Авторизация қажет');
+
+      // 1. Generate random 6-char code
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      // 2. Determine categories
+      const categories = customCategories
+        ? customCategories.split(',').map(c => c.trim())
+        : DEFAULT_CATEGORIES;
+
+      // 3. Create game room
+      const { data: room, error } = await supabase
+        .from('game_rooms')
+        .insert([
+          {
+            code: code,
+            host_id: user.id,
+            status: 'waiting',
+            categories: categories
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // 4. Add host to room_players
+      await supabase.from('room_players').insert([
+        { room_id: room.id, user_id: user.id, is_host: true, is_ready: true }
+      ]);
+
+      Alert.alert('Бөлме жасалды!', `Сіздің кодыңыз: ${code}`, [
+        { text: 'ОК', onPress: () => router.replace(`/lobby?roomId=${room.id}`) }
+      ]);
+    } catch (error: any) {
+      Alert.alert('Қателік', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <ScreenHeader title="Ойын режимі" subtitle="Параметрлерді баптаңыз" />
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Card style={styles.setupCard}>
+          <View style={styles.headerRow}>
+            <Settings color={Colors.gold} size={24} />
+            <Text style={styles.cardTitle}>Баптаулар</Text>
+          </View>
+
+          <Text style={styles.label}>Категориялар (үтірмен бөліңіз):</Text>
+          <Input
+            placeholder="Бос қалдырсаңыз, стандартты категориялар қолданылады"
+            value={customCategories}
+            onChangeText={setCustomCategories}
+            multiline
+            style={styles.input}
+          />
+          <Text style={styles.hint}>Стандартты: {DEFAULT_CATEGORIES.join(', ')}</Text>
+        </Card>
+
+        <Card style={styles.infoCard}>
+          <View style={styles.headerRow}>
+            <Trophy color={Colors.gold} size={24} />
+            <Text style={styles.cardTitle}>Ережелер</Text>
+          </View>
+          <Text style={styles.infoText}>
+            1. Бөлме құрылғанда 6 таңбалы код беріледі.{"\n"}
+            2. Ойыншылар қосылып, "Дайынмын" басылуын күтесіз.{"\n"}
+            3. Әр раундта бір әріп беріледі.{"\n"}
+            4. Ең жылдам және дұрыс жауап берген ұпай алады.
+          </Text>
+        </Card>
+
+        <Button
+          label="Бөлме құру"
+          onPress={handleCreateRoom}
+          variant="gold"
+          size="lg"
+          style={styles.createButton}
+          loading={loading}
+        />
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.bg },
+  scroll: { paddingHorizontal: Spacing.xl, paddingBottom: 100, paddingTop: Spacing.md },
+  setupCard: { gap: Spacing.md, marginBottom: Spacing.lg },
+  infoCard: { gap: Spacing.md, marginBottom: Spacing.lg },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm
+  },
+  cardTitle: { fontSize: 18, fontFamily: Fonts.bodySemiBold, color: Colors.text },
+  label: { fontSize: 14, fontFamily: Fonts.body, color: Colors.textSecondary },
+  input: { minHeight: 60, textAlignVertical: 'top' },
+  hint: { fontSize: 12, color: Colors.textTertiary, fontFamily: Fonts.body, marginTop: 4 },
+  infoText: {
+    fontSize: 14,
+    fontFamily: Fonts.body,
+    color: Colors.textSecondary,
+    lineHeight: 22
+  },
+  createButton: { marginTop: Spacing.lg, width: '100%' },
+});

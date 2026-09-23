@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Stack, SplashScreen } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as ScreenCapture from 'expo-screen-capture';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider } from '@/lib/auth';
 import { ToastProvider } from '@/lib/toast';
@@ -37,6 +38,11 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    // Скриншот және видеожазуды бұғаттау (Android-та қараңғы экран жасайды)
+    ScreenCapture.preventScreenshotAsync();
+  }, []);
 
   if (!fontsLoaded && !fontError) {
     return (

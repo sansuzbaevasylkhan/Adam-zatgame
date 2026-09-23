@@ -1,39 +1,66 @@
 import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
-import { Alert } from 'react-native';
+import * as Device from 'expo-device';
+import { Platform } from 'react-native';
+import { supabase } from './supabase';
 
-export async function requestNotificationPermissions() {
-  // Check if we are running in Expo Go
-  if (Constants.appOwnership === 'expo') {
-    Alert.alert(
-      'Expo Go Шектеуі',
-      'Push-хабарламалар Expo Go-да жұмыс істемейді. Оны тексеру үшін "Development Build" орнату керек.'
-    );
-    return false;
+// Хабарламалардың қалай көрсетілетінін баптаймыз
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+/**
+ * Push-хабарламаларға рұқсат алып, Expo токенін қайтарады
+ */
+export async function registerForPushNotificationsAsync() {
+  let token;
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FFD700',
+    });
   }
 
-  try {
+  if (Device.isDevice) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
-    return finalStatus === 'granted';
-  } catch (e) {
-    console.error('Notification permission error:', e);
-    return false;
+    if (finalStatus !== 'granted') {
+      throw new Error('Хабарламаларға рұқсат берілмеді!');
+    }
+
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+  } else {
+    console.log('Push notifications must be paused on emulator');
   }
+
+  return token;
 }
 
-export async function scheduleTestNotification() {
-  if (Constants.appOwnership === 'expo') return;
+/**
+ * Токенді Supabase-тегі қолданушы профиліне сақтайды
+ */
+export const savePushToken = async (token: string) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Сәлем! 👋',
-      body: 'Бұл push-хабарламаның тесті',
-    },
-    trigger: { seconds: 2 },
-  });
-}
+    const { error } = await supabase
+      .from('profiles')
+      .update({ push_token: token })
+      .eq('id', user.id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error saving push token:', error);
+  }
+};
