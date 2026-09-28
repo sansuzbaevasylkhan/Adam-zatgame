@@ -3,31 +3,67 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
 
-// Хабарламалардың қалай көрсетілетінін баптаймыз
+// Notification behavior settings
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
-/**
- * Push-хабарламаларға рұқсат алып, Expo токенін қайтарады
- */
-export async function registerForPushNotificationsAsync() {
-  let token;
+export async function requestNotificationPermissions() {
+  try {
+    if (!Device.isDevice) {
+      console.log('Must use physical device for Push Notifications');
+      return false;
+    }
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FFD700',
-    });
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    return finalStatus === 'granted';
+  } catch (e) {
+    console.error('Error requesting notification permissions:', e);
+    return false;
   }
+}
 
-  if (Device.isDevice) {
+export async function scheduleTestNotification() {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Тест хабарламасы 🔔",
+        body: "Хабарламалар жұмыс істеп тұр!",
+      },
+      trigger: { seconds: 2 },
+    });
+  } catch (e) {
+    console.error('Error scheduling test notification:', e);
+  }
+}
+
+export async function registerForPushNotificationsAsync() {
+  try {
+    if (!Device.isDevice) {
+      console.log('Must use physical device for Push Notifications');
+      return null;
+    }
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FFD700',
+      });
+    }
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (existingStatus !== 'granted') {
@@ -35,21 +71,19 @@ export async function registerForPushNotificationsAsync() {
       finalStatus = status;
     }
     if (finalStatus !== 'granted') {
-      throw new Error('Хабарламаларға рұқсат берілмеді!');
+      console.log('Failed to get push token for push notification!');
+      return null;
     }
 
-    token = (await Notifications.getExpoPushTokenAsync()).data;
-  } else {
-    console.log('Push notifications must be paused on emulator');
+    const token = (await Notifications.getExpoPushTokenAsync()).data;
+    return token;
+  } catch (e) {
+    console.error('Error registering for push notifications:', e);
+    return null;
   }
-
-  return token;
 }
 
-/**
- * Токенді Supabase-тегі қолданушы профиліне сақтайды
- */
-export const savePushToken = async (token: string) => {
+export async function savePushToken(token: string) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -60,7 +94,7 @@ export const savePushToken = async (token: string) => {
       .eq('id', user.id);
 
     if (error) throw error;
-  } catch (error) {
-    console.error('Error saving push token:', error);
+  } catch (e) {
+    console.error('Error saving push token:', e);
   }
-};
+}

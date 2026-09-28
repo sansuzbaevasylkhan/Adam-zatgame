@@ -12,14 +12,12 @@ export default function IndexScreen() {
 
   useEffect(() => {
     if (loading) return;
-    const timer = setTimeout(() => {
-      if (session) {
-        router.replace('/(tabs)/home');
-      } else {
-        router.replace('/welcome');
-      }
-    }, 600);
-    return () => clearTimeout(timer);
+
+    if (session) {
+      router.replace('/(tabs)/home');
+    } else {
+      router.replace('/welcome');
+    }
   }, [session, loading, router]);
 
   if (loading) return <LoadingScreen message="Қосылу..." />;

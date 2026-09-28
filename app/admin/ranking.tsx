@@ -1,8 +1,16 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, ViewStyle, TextStyle } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
-import { useEffect, useState } from 'react';
 import { Trophy } from 'lucide-react-native';
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+};
 
 export default function AdminRanking() {
   const [rankings, setRankings] = useState<any[]>([]);
@@ -10,7 +18,6 @@ export default function AdminRanking() {
 
   useEffect(() => {
     async function fetchRankings() {
-      // Get all players' total scores
       const { data: answers } = await supabase
         .from('player_answers')
         .select('user_id, score');
@@ -20,13 +27,11 @@ export default function AdminRanking() {
         return;
       }
 
-      // Calculate total score for each user
       const scoreMap: Record<string, number> = {};
       answers.forEach(ans => {
         scoreMap[ans.user_id] = (scoreMap[ans.user_id] || 0) + (ans.score || 0);
       });
 
-      // Get profiles for these users
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, display_name, created_at');
@@ -39,7 +44,6 @@ export default function AdminRanking() {
           total_score: scoreMap[p.id] || 0
         }));
 
-        // Sort by total score descending
         setRankings(results.sort((a, b) => b.total_score - a.total_score));
       }
       setLoading(false);
@@ -47,15 +51,13 @@ export default function AdminRanking() {
     fetchRankings();
   }, []);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}.${month}.${year}`;
-  };
-
-  if (loading) return <View style={styles.center}><Text style={styles.loadingText}>Жүктелуде...</Text></View>;
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.loadingText}>Жүктелуде...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -70,19 +72,19 @@ export default function AdminRanking() {
         {rankings.map((user, index) => {
           const rank = index + 1;
           let rankColor = Colors.text;
-          let rankBadge = '';
-          let cardStyle = styles.rankingCard;
+          let rankBadge = '👤';
+          let cardStyle: any = styles.rankingCard;
 
           if (rank === 1) {
-            rankColor = '#FFD700'; // Gold
+            rankColor = '#FFD700';
             rankBadge = '🥇';
             cardStyle = [styles.rankingCard, styles.cardGold];
           } else if (rank === 2) {
-            rankColor = '#C0C0C0'; // Silver
+            rankColor = '#C0C0C0';
             rankBadge = '🥈';
             cardStyle = [styles.rankingCard, styles.cardSilver];
           } else if (rank === 3) {
-            rankColor = '#CD7F32'; // Bronze
+            rankColor = '#CD7F32';
             rankBadge = '🥉';
             cardStyle = [styles.rankingCard, styles.cardBronze];
           }
@@ -93,12 +95,10 @@ export default function AdminRanking() {
                 <Text style={[styles.rankNumber, { color: rankColor }]}>{rank}</Text>
                 <Text style={styles.rankEmoji}>{rankBadge}</Text>
               </View>
-
               <View style={styles.userInfo}>
                 <Text style={styles.userName}>{user.display_name}</Text>
                 <Text style={styles.userDate}>{formatDate(user.created_at)}</Text>
               </View>
-
               <View style={styles.scoreInfo}>
                 <Text style={styles.scoreValue}>{user.total_score}</Text>
                 <Text style={styles.scoreLabel}>ұпай</Text>
@@ -116,21 +116,38 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     paddingTop: 60,
     backgroundColor: '#0A0A0C',
-    flexGrow: 1
-  },
+    flexGrow: 1,
+  } as ViewStyle,
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0A0A0C',
+  } as ViewStyle,
+  loadingText: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.body,
+    fontSize: 16,
+  } as TextStyle,
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30
-  },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    marginBottom: 30,
+  } as ViewStyle,
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  } as ViewStyle,
   title: {
     fontSize: 28,
     fontFamily: Fonts.display,
     color: Colors.text,
-    letterSpacing: 1
-  },
-  rankingList: { gap: 12 },
+    letterSpacing: 1,
+  } as TextStyle,
+  rankingList: {
+    gap: 12,
+  } as ViewStyle,
   rankingCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -140,54 +157,52 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: '#2A2A32',
-  },
-  cardGold: { borderColor: '#FFD700', backgroundColor: 'rgba(255, 215, 0, 0.05)' },
-  cardSilver: { borderColor: '#C0C0C0', backgroundColor: 'rgba(192, 192, 192, 0.05)' },
-  cardBronze: { borderColor: '#CD7F32', backgroundColor: 'rgba(205, 127, 50, 0.05)' },
+  } as ViewStyle,
+  cardGold: { borderColor: '#FFD700', backgroundColor: 'rgba(255, 215, 0, 0.05)' } as ViewStyle,
+  cardSilver: { borderColor: '#C0C0C0', backgroundColor: 'rgba(192, 192, 192, 0.05)' } as ViewStyle,
+  cardBronze: { borderColor: '#CD7F32', backgroundColor: 'rgba(205, 127, 50, 0.05)' } as ViewStyle,
   rankInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    width: 60
-  },
+    width: 60,
+  } as ViewStyle,
   rankNumber: {
     fontSize: 20,
     fontFamily: Fonts.heading,
-    fontWeight: 'bold'
-  },
+    fontWeight: 'bold',
+  } as TextStyle,
   rankEmoji: {
-    fontSize: 16
-  },
+    fontSize: 16,
+  } as TextStyle,
   userInfo: {
     flex: 1,
-    marginLeft: 10
-  },
+    marginLeft: 10,
+  } as ViewStyle,
   userName: {
     fontSize: 16,
     fontFamily: Fonts.bodySemiBold,
-    color: Colors.text
-  },
+    color: Colors.text,
+  } as TextStyle,
   userDate: {
     fontSize: 12,
     fontFamily: Fonts.body,
-    color: Colors.textSecondary
-  },
+    color: Colors.textSecondary,
+  } as TextStyle,
   scoreInfo: {
     alignItems: 'flex-end',
-    gap: -4
-  },
+    gap: -4,
+  } as ViewStyle,
   scoreValue: {
     fontSize: 20,
     fontFamily: Fonts.heading,
     color: Colors.gold,
-    fontWeight: 'bold'
-  },
+    fontWeight: 'bold',
+  } as TextStyle,
   scoreLabel: {
     fontSize: 10,
     fontFamily: Fonts.bodySemiBold,
     color: Colors.textSecondary,
-    textAlign: 'right'
-  },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0A0A0C' },
-  loadingText: { style: { color: Colors.textSecondary, fontFamily: Fonts.body } }
+    textAlign: 'right',
+  } as TextStyle,
 });

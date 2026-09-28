@@ -37,8 +37,8 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>
-          <Avatar name={profile?.display_name || 'O'} avatarUrl={profile?.avatar_url} size={80} />
-          <Text style={styles.name}>{profile?.display_name || t('profile.defaultPlayerName')}</Text>
+          <Avatar name={profile?.full_name || profile?.display_name || 'O'} avatarUrl={profile?.avatar_url} size={80} />
+          <Text style={styles.name}>{profile?.full_name || profile?.display_name || t('profile.defaultPlayerName')}</Text>
           {profile?.bio && <Text style={styles.bio}>{profile.bio}</Text>}
         </View>
 

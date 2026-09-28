@@ -11,6 +11,7 @@ import { useToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { pickRandomLetter, pickRandomCategories } from '@/constants/game';
 import { Hand, Clock, AlertCircle } from 'lucide-react-native';
+import * as NavigationBar from 'expo-navigation-bar';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 type RoomData = {
@@ -123,6 +124,32 @@ export default function GameScreen() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
+
+  useEffect(() => {
+    // Ойын басталғанда телефонды толық экранды режимге өткізу
+    async function enableImmersiveMode() {
+      try {
+        // Тек модуль бар болғанда ғана орындау (Expo Go-да crash болмауы үшін)
+        if (NavigationBar && typeof (NavigationBar as any).setVisibilityAsync === 'function') {
+          await (NavigationBar as any).setVisibilityAsync('hidden');
+          if (typeof (NavigationBar as any).setBehaviorAsync === 'function') {
+            await (NavigationBar as any).setBehaviorAsync('inset');
+          }
+        }
+      } catch (e) {
+        console.warn("Immersive mode error:", e);
+      }
+    }
+
+    enableImmersiveMode();
+
+    return () => {
+      // Ойыннан шыққанда батырмаларды қайтару
+      if (NavigationBar && typeof (NavigationBar as any).setVisibilityAsync === 'function') {
+        (NavigationBar as any).setVisibilityAsync('visible').catch((e: any) => console.warn(e));
+      }
+    };
+  }, []);
 
   // Timer countdown
   useEffect(() => {

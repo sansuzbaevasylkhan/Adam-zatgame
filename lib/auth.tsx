@@ -22,14 +22,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-      setLoading(false);
-    });
+    let isMounted = true;
+
+    async function initializeAuth() {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        if (initialSession?.user) {
+          await fetchProfile(initialSession.user.id);
+        }
+      } catch (error) {
+        console.error("Error during auth initialization:", error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -41,20 +56,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
   async function fetchProfile(userId: string) {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
+
+      if (error) {
+        console.error("Supabase error fetching profile:", error.message);
+      }
       setProfile(data);
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      console.error("Unexpected error fetching profile:", error);
     }
   }
 
@@ -63,8 +83,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { data, error };
   }
 
-  async function signUp(email: string, password: string) {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+  async function signUp(email: string, password: string, name?: string) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+        },
+      },
+    });
     return { data, error };
   }
 

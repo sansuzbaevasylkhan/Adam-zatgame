@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { Mail, Lock, User } from 'lucide-react-native';
+import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react-native';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -18,6 +18,7 @@ export default function SignupScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -35,7 +36,8 @@ export default function SignupScreen() {
     const { error: err } = await signUp(email.trim(), password, name.trim());
     setLoading(false);
     if (err) {
-      setError(err);
+      const errorMessage = err instanceof Error ? err.message : (typeof err === 'string' ? err : 'An unexpected error occurred');
+      setError(errorMessage);
     } else {
       show(t('signup.success.done'), 'success');
       router.replace('/(tabs)/home');
@@ -77,9 +79,19 @@ export default function SignupScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder={t('signup.placeholder.password')}
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 style={styles.inputWithIcon}
               />
+              <TouchableOpacity
+                style={styles.passwordToggle}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff color={Colors.textTertiary} size={20} />
+                ) : (
+                  <Eye color={Colors.textTertiary} size={20} />
+                )}
+              </TouchableOpacity>
             </View>
 
             {error && <Text style={styles.errorText}>{error}</Text>}
@@ -115,6 +127,12 @@ const styles = StyleSheet.create({
   form: { gap: Spacing.md },
   inputRow: { position: 'relative', justifyContent: 'center' },
   inputIcon: { position: 'absolute', left: 14, zIndex: 1 },
+  passwordToggle: {
+    position: 'absolute',
+    right: 14,
+    zIndex: 1,
+    padding: 5,
+  },
   inputWithIcon: { paddingLeft: 42 },
   errorText: { color: Colors.red, fontSize: 13, fontFamily: Fonts.body, marginLeft: Spacing.xs },
   button: { marginTop: Spacing.md },

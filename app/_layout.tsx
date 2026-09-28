@@ -35,21 +35,28 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(e => console.warn("SplashScreen hide error:", e));
     }
   }, [fontsLoaded, fontError]);
 
   useEffect(() => {
-    // Скриншот және видеожазуды бұғаттау (Android-та қараңғы экран жасайды)
-    ScreenCapture.preventScreenshotAsync();
+    async function disableScreenshots() {
+      try {
+        // Using 'any' to bypass TS error as some versions of expo-screen-capture
+        // might have different naming or are not correctly typed in some environments
+        const capture = ScreenCapture as any;
+        if (capture && typeof capture.preventScreenshotAsync === 'function') {
+          await capture.preventScreenshotAsync();
+        }
+      } catch (e) {
+        console.warn("Failed to block screen capture:", e);
+      }
+    }
+    disableScreenshots();
   }, []);
 
   if (!fontsLoaded && !fontError) {
-    return (
-      <View style={{ flex: 1, backgroundColor: Colors.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color={Colors.gold} />
-      </View>
-    );
+    return null; // Let SplashScreen handle the loading state for smoother transition
   }
 
   return (
@@ -57,6 +64,7 @@ export default function RootLayout() {
       <AuthProvider>
         <ToastProvider>
           <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="light" />

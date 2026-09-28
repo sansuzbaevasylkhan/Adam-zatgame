@@ -17,9 +17,9 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>{t('home.greeting')}</Text>
-          <Text style={styles.name}>{profile?.display_name || t('home.defaultPlayerName')}</Text>
+          <Text style={styles.name}>{profile?.full_name || profile?.display_name || t('home.defaultPlayerName')}</Text>
         </View>
-        <Avatar name={profile?.display_name || 'O'} avatarUrl={profile?.avatar_url} size={44} />
+        <Avatar name={profile?.full_name || profile?.display_name || 'O'} avatarUrl={profile?.avatar_url} size={44} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>

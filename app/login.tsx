@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { Mail, Lock } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -17,6 +17,7 @@ export default function LoginScreen() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +31,8 @@ export default function LoginScreen() {
     const { error: err } = await signIn(email.trim(), password);
     setLoading(false);
     if (err) {
-      setError(err);
+      const errorMessage = err instanceof Error ? err.message : (typeof err === 'string' ? err : 'An unexpected error occurred');
+      setError(errorMessage);
     } else {
       show(t('login.success.welcome'), 'success');
       router.replace('/(tabs)/home');
@@ -66,9 +68,19 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder={t('login.placeholder.password')}
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 style={styles.inputWithIcon}
               />
+              <TouchableOpacity
+                style={styles.passwordToggle}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff color={Colors.textTertiary} size={20} />
+                ) : (
+                  <Eye color={Colors.textTertiary} size={20} />
+                )}
+              </TouchableOpacity>
             </View>
 
             {error && <Text style={styles.errorText}>{error}</Text>}
@@ -120,6 +132,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 14,
     zIndex: 1,
+  },
+  passwordToggle: {
+    position: 'absolute',
+    right: 14,
+    zIndex: 1,
+    padding: 5,
   },
   inputWithIcon: {
     paddingLeft: 42,
