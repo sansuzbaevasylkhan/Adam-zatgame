@@ -274,6 +274,17 @@ const UsersList = () => {
       if (data) setUsers(data);
     }
     fetchUsers();
+
+    const channel = supabase
+      .channel('profiles-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, (payload) => {
+        setUsers((prev) => [payload.new, ...prev]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const formatDate = (dateString) => {
@@ -331,6 +342,17 @@ const Ranking = () => {
       }
     }
     fetchRankings();
+
+    const channel = supabase
+      .channel('ranking-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'player_answers' }, () => {
+        fetchRankings();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const formatDate = (dateString) => {
@@ -370,8 +392,71 @@ const Ranking = () => {
   );
 };
 
-export default function AdminWeb() {
+const AdminWeb = () => {
   const [activePage, setActivePage] = useState('dashboard');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (email === 'asylkhansansuzbaev73@gmail.com') {
+      setIsAuthenticated(true);
+      setError('');
+    } else {
+      setError('Сіздің email-іңіз admin рөліне сәйкес келмейді.');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{
+        ...styles.adminContainer,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column'
+      }}>
+        <div style={{
+          backgroundColor: theme.bgSurface,
+          padding: '40px',
+          borderRadius: '20px',
+          border: `1px solid ${theme.borderColor}`,
+          textAlign: 'center',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+        }}>
+          <h1 style={styles.brandTitle}>ADMIN ACCESS</h1>
+          <p style={styles.brandSubtitle}>Авторизациядан өтіңіз</p>
+          <form onSubmit={handleLogin} style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <input
+              type="email"
+              placeholder="Email енгізіңіз"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={styles.searchBox}
+            />
+            {error && <p style={{ color: theme.redAccent, fontSize: '14px', margin: 0 }}>{error}</p>}
+            <button
+              type="submit"
+              style={{
+                backgroundColor: theme.goldPrimary,
+                color: '#000',
+                padding: '12px',
+                borderRadius: '10px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                border: 'none',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => e.target.style.opacity = '0.8'}
+              onMouseOut={(e) => e.target.style.opacity = '1'}
+            >
+              Кіру
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.adminContainer}>
@@ -396,7 +481,7 @@ export default function AdminWeb() {
             </div>
           ))}
         </div>
-        <div style={styles.logoutBtn} onClick={() => alert('Шығу...')}>
+        <div style={styles.logoutBtn} onClick={() => setIsAuthenticated(false)}>
           <span>🚪</span>
           <span>Шығу</span>
         </div>
@@ -408,4 +493,4 @@ export default function AdminWeb() {
       </div>
     </div>
   );
-}
+};
