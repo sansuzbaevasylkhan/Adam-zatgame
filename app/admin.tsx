@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, FlatList, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { Colors, Spacing, Radius, Fonts } from '@/constants/theme';
-import { Users, UserPlus, Calendar } from 'lucide-react-native';
+import { Users, UserPlus, Calendar, Lock } from 'lucide-react-native';
 
 type UserProfile = {
   id: string;
@@ -13,33 +15,37 @@ type UserProfile = {
   games_played: number;
 };
 
+const ADMIN_EMAIL = 'asylkhansansuzbaev73@gmail.com';
+
 export default function AdminScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const { show } = useToast();
 
-  // 1. Барлық пайдаланушыларды жүктеу
-  const fetchUsers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('total_score', { ascending: false }); // РЕЙТИНГ БОЙЫНША РЕТТЕУ (Ұпайы көп адам жоғарыда)
-
-      if (error) throw error;
-      setUsers(data as unknown as UserProfile[]);
-    } catch (error: any) {
-      show('Пайдаланушыларды жүктеуде қате: ' + error.message, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchUsers();
+    // 1. ҚОРҒАНЫС: Тек белгіленген email-ге рұқсат беру
+    const checkAdminAccess = async () => {
+      if (!user) {
+        show('Кіру қажет!', 'error');
+        router.replace('/login');
+        return;
+      }
 
-    // 2. REALTIME ТЫҢДАУШЫ (Listener)
-    // Пайдаланушы тіркелген сәтте автоматты түрде жаңарту
+      if (user.email !== ADMIN_EMAIL) {
+        show('Сізге бұл бетке кіруге рұқсат жоқ!', 'error');
+        router.replace('/');
+        return;
+      }
+
+      // Егер админ болса, мәліметтерді жүктейді
+      await fetchUsers();
+    };
+
+    checkAdminAccess();
+
+    // 2. REALTIME ТЫҢДАУШЫ
     const channel = supabase
       .channel('admin-user-monitor')
       .on(
@@ -51,11 +57,7 @@ export default function AdminScreen() {
         },
         (payload) => {
           const newUser = payload.new as UserProfile;
-
-          // Жаңа пайдаланушыны тізімнің басына қосу
           setUsers((prevUsers) => [newUser, ...prevUsers]);
-
-          // Хабарлама шығару
           show(`🚀 Жаңа пайдаланушы қосылды: ${newUser.display_name}!`, 'success');
         }
       )
@@ -64,12 +66,29 @@ export default function AdminScreen() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
+
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('total_score', { ascending: false });
+
+      if (error) throw error;
+      setUsers(data as unknown as UserProfile[]);
+    } catch (error: any) {
+      show('Пайдаланушыларды жүктеуде қате: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
       <View style={styles.center}>
-        <Text style={styles.loadingText}>Жүктелуде...</Text>
+        <ActivityIndicator size="large" color={Colors.gold} />
+        <Text style={styles.loadingText}>Админ рұқсаты тексерілуде...</Text>
       </View>
     );
   }
@@ -134,7 +153,7 @@ export default function AdminScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.bg },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.bg, gap: 10 },
   loadingText: { color: Colors.gold, fontFamily: Fonts.bodySemiBold, fontSize: 16 },
   header: {
     flexDirection: 'row',
