@@ -2,7 +2,7 @@
   "expo": {
     "name": "Adam Zat Games",
     "slug": "adam-zat-game",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -40,7 +40,7 @@
     },
     "android": {
       "package": "kz.asylkhansansuzbaev.adamzat.game",
-      "versionCode": 2,
+      "versionCode": 3,
       "minSdkVersion": 30,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
