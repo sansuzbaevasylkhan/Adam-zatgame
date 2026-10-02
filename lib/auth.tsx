@@ -105,6 +105,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         display_name: name,
         updated_at: new Date().toISOString(),
       });
+      // Тіркелген соң профильді бірден жаңарту
+      await fetchProfile(data.user.id);
     }
 
     return { data, error };

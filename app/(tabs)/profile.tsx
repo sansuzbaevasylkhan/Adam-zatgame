@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -11,7 +11,7 @@ import { Settings, History, LogOut, Edit3, Zap, Trophy, Award } from 'lucide-rea
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { profile, signOut } = useAuth();
+  const { profile, user, signOut } = useAuth();
   const { show } = useToast();
   const { t } = useTranslation();
 
@@ -21,6 +21,12 @@ export default function ProfileScreen() {
     router.replace('/welcome');
   };
 
+  // Есімді анықтау логикасы (3 деңгейлі тексеру)
+  const displayName = profile?.full_name ||
+                      profile?.display_name ||
+                      user?.user_metadata?.full_name ||
+                      t('profile.defaultPlayerName');
+
   const stats = [
     { icon: Zap, label: t('profile.stats.games'), value: profile?.total_games ?? 0, color: Colors.gold },
     { icon: Trophy, label: t('profile.stats.wins'), value: profile?.total_wins ?? 0, color: Colors.green },
@@ -29,7 +35,7 @@ export default function ProfileScreen() {
 
   const menuItems = [
     { icon: Edit3, label: t('profile.menu.edit'), onPress: () => router.push('/edit-profile') },
-    { icon: History, label: t('profile.menu.history'), onPress: () => router.push('/game-history') },
+    { icon: History, label: t('profile.//menu.history'), onPress: () => router.push('/game-history') },
     { icon: Settings, label: t('profile.menu.settings'), onPress: () => router.push('/settings') },
   ];
 
@@ -37,8 +43,8 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>
-          <Avatar name={profile?.full_name || profile?.display_name || 'O'} avatarUrl={profile?.avatar_url} size={80} />
-          <Text style={styles.name}>{profile?.full_name || profile?.display_name || t('profile.defaultPlayerName')}</Text>
+          <Avatar name={displayName} avatarUrl={profile?.avatar_url} size={80} />
+          <Text style={styles.name}>{displayName}</Text>
           {profile?.bio && <Text style={styles.bio}>{profile.bio}</Text>}
         </View>
 
