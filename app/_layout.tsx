@@ -1,28 +1,23 @@
 import { useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, AppState, AppStateStatus } from 'react-native';
 import { Stack, SplashScreen } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as ScreenCapture from 'expo-screen-capture';
+import * as NavigationBar from 'expo-navigation-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import { AuthProvider } from '@/lib/auth';
+import { AuthProvider, useAuth } from '@/lib/auth';
 import { ToastProvider } from '@/lib/toast';
 import { SettingsProvider } from '@/lib/settingsContext';
 import '@/lib/i18n';
 import { useFonts } from 'expo-font';
-import {
-  Unbounded_600SemiBold,
-  Unbounded_700Bold,
-} from '@expo-google-fonts/unbounded';
-import {
-  Manrope_400Regular,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-} from '@expo-google-fonts/manrope';
+import { Unbounded_600SemiBold, Unbounded_700Bold } from '@expo-google-fonts/unbounded';
+import { Manrope_400Regular, Manrope_600SemiBold, Manrope_700Bold } from '@expo-google-fonts/manrope';
 import { Colors } from '@/constants/theme';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function AppInner() {
+  const { refreshProfile } = useAuth();
   useFrameworkReady();
 
   const [fontsLoaded, fontError] = useFonts({
@@ -40,34 +35,62 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
 
   useEffect(() => {
+    // 1. Fullscreen / Immersive Mode (Android)
+    async function setupImmersiveMode() {
+      try {
+        await NavigationBar.setVisibilityAsync('hidden');
+        await NavigationBar.setBehaviorAsync('overlay-swipe');
+      } catch (e) {
+        console.warn("Failed to set immersive mode:", e);
+      }
+    }
+    setupImmersiveMode();
+
+    // 2. AppState Listener (Фонға кеткенде синхрондау)
+    const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        console.log('App returned to active state, refreshing profile...');
+        await refreshProfile();
+      }
+    });
+
+    // 3. Screenshots block
     async function disableScreenshots() {
       try {
-        // Using 'any' to bypass TS error as some versions of expo-screen-capture
-        // might have different naming or are not correctly typed in some environments
         const capture = ScreenCapture as any;
         if (capture && typeof capture.preventScreenshotAsync === 'function') {
           await capture.preventScreenshotAsync();
         }
       } catch (e) {
-        console.warn("Failed to block screen capture:", e);
+        console.warn("Failed to block screenshots:", e);
       }
     }
     disableScreenshots();
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
-  if (!fontsLoaded && !fontError) {
-    return null; // Let SplashScreen handle the loading state for smoother transition
-  }
+  if (!fontsLoaded && !fontError) return null;
 
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="+not-found" />
+    </Stack>
+  );
+}
+
+export default function RootLayout() {
   return (
     <SettingsProvider>
       <AuthProvider>
         <ToastProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="light" />
+          <View style={{ flex: 1 }}>
+            <AppInner />
+            <StatusBar hidden />
+          </View>
         </ToastProvider>
       </AuthProvider>
     </SettingsProvider>

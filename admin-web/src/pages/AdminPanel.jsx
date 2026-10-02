@@ -392,7 +392,7 @@ const Ranking = () => {
   );
 };
 
-const AdminWeb = () => {
+export default function AdminWeb() {
   const [activePage, setActivePage] = useState('dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
@@ -493,4 +493,4 @@ const AdminWeb = () => {
       </div>
     </div>
   );
-};
+}

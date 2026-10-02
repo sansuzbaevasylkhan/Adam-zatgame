@@ -8,7 +8,7 @@ interface AuthContextType {
   profile: any | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name?: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
 }
@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signUp(email: string, password: string, name?: string) {
+    // 1. Auth-қа тіркелу
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -93,6 +94,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       },
     });
+
+    if (error) return { data, error };
+
+    // 2. Профиль кестесіне деректерді тікелей жазу (Триггер болмаған жағдайда сақтандыру)
+    if (data.user) {
+      await supabase.from("profiles").upsert({
+        id: data.user.id,
+        full_name: name,
+        display_name: name,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
     return { data, error };
   }
 

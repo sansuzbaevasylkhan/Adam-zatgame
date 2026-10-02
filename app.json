@@ -26,7 +26,8 @@
       "expo-web-browser",
       "expo-splash-screen",
       "expo-status-bar",
-      "expo-localization"
+      "expo-localization",
+      "expo-navigation-bar"
     ],
     "experiments": {
       "typedRoutes": true
@@ -45,7 +46,12 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0F0F12"
       },
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "navigationBar": {
+        "visible": "hidden",
+        "behavior": "overlay-swipe",
+        "backgroundColor": "#00000000"
+      }
     },
     "owner": "asylkhansansuzba454478645"
   }

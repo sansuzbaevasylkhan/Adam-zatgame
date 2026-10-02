@@ -126,10 +126,9 @@ export default function GameScreen() {
   }, [roomId]);
 
   useEffect(() => {
-    // Ойын басталғанда телефонды толық экранды режимге өткізу
     async function enableImmersiveMode() {
       try {
-        // Тек модуль бар болғанда ғана орындау (Expo Go-да crash болмауы үшін)
+        // Check if NavigationBar is available and not null
         if (NavigationBar && typeof (NavigationBar as any).setVisibilityAsync === 'function') {
           await (NavigationBar as any).setVisibilityAsync('hidden');
           if (typeof (NavigationBar as any).setBehaviorAsync === 'function') {
@@ -137,16 +136,20 @@ export default function GameScreen() {
           }
         }
       } catch (e) {
-        console.warn("Immersive mode error:", e);
+        // Silently fail in Expo Go to prevent crash
+        console.warn("Immersive mode not supported in this environment");
       }
     }
 
     enableImmersiveMode();
 
     return () => {
-      // Ойыннан шыққанда батырмаларды қайтару
-      if (NavigationBar && typeof (NavigationBar as any).setVisibilityAsync === 'function') {
-        (NavigationBar as any).setVisibilityAsync('visible').catch((e: any) => console.warn(e));
+      try {
+        if (NavigationBar && typeof (NavigationBar as any).setVisibilityAsync === 'function') {
+          (NavigationBar as any).setVisibilityAsync('visible').catch(() => {});
+        }
+      } catch (e) {
+        // Silently fail
       }
     };
   }, []);
