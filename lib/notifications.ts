@@ -83,6 +83,17 @@ export async function registerForPushNotificationsAsync() {
   }
 }
 
+export async function initPushNotifications() {
+  try {
+    const token = await registerForPushNotificationsAsync();
+    if (token) {
+      await savePushToken(token);
+    }
+  } catch (e) {
+    console.error('Error initializing push notifications:', e);
+  }
+}
+
 export async function savePushToken(token: string) {
   try {
     const { data: { user } } = await supabase.auth.getUser();

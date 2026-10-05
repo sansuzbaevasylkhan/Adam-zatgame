@@ -38,7 +38,7 @@ type AnswerMap = Record<string, string>;
 export default function GameScreen() {
   const router = useRouter();
   const { roomId } = useLocalSearchParams();
-  const { profile } = useAuth();
+  const { profile, displayName } = useAuth();
   const { show } = useToast();
   const { t } = useTranslation();
   const [room, setRoom] = useState<RoomData | null>(null);
@@ -103,7 +103,7 @@ export default function GameScreen() {
 
         if (newRoom.stop_triggered_by && !stopOverlay) {
           const stopper = players.find((p) => p.user_id === newRoom.stop_triggered_by);
-          setStopperName(stopper?.profiles.display_name ?? t('game.stopper.someone'));
+          setStopperName(stopper?.profiles.display_name || stopper?.profiles.full_name || t('game.stopper.someone'));
           setStopOverlay(true);
           if (timerRef.current) clearInterval(timerRef.current);
           setTimeout(() => {
@@ -183,7 +183,7 @@ export default function GameScreen() {
   const handleStop = async () => {
     if (!profile || !room || room.stop_triggered_by) return;
     if (timerRef.current) clearInterval(timerRef.current);
-    setStopperName(profile.display_name);
+    setStopperName(displayName || t('profile.defaultPlayerName'));
     setStopOverlay(true);
 
     await supabase

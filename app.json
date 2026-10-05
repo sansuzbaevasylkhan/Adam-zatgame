@@ -2,7 +2,7 @@
   "expo": {
     "name": "Adam Zat Games",
     "slug": "adam-zat-game",
-    "version": "1.1.2",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -51,7 +51,20 @@
         "visible": "hidden",
         "behavior": "overlay-swipe",
         "backgroundColor": "#00000000"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "mygame.kz",
+              "pathPrefix": "/join"
+            }
+          ]
+        }
+      ]
     },
     "owner": "asylkhansansuzba454478645"
   }

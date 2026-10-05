@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
+import { initPushNotifications } from "./notifications";
+import { getPendingInvite, clearPendingInvite } from "./storage";
 
 interface AuthContextType {
   session: Session | null;
@@ -21,6 +23,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Unified name resolution logic
+  const displayName = profile?.display_name ||
+                      profile?.full_name ||
+                      user?.user_metadata?.full_name ||
+                      null;
+
   useEffect(() => {
     let isMounted = true;
 
@@ -33,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(initialSession?.user ?? null);
         if (initialSession?.user) {
           await fetchProfile(initialSession.user.id);
+          await initPushNotifications();
         }
       } catch (error) {
         console.error("Error during auth initialization:", error);
@@ -49,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+        initPushNotifications();
       } else {
         setProfile(null);
       }
@@ -80,6 +90,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error && data.user) {
+      // Check for pending invite after login
+      const pendingCode = await getPendingInvite();
+      if (pendingCode) {
+        // We don't redirect here, but we can store it in a way that
+        // the app can react to it after the session is set.
+        console.log('Pending invite found after login:', pendingCode);
+      }
+    }
     return { data, error };
   }
 
@@ -124,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, signIn, signUp, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ session, user, profile, displayName, loading, signIn, signUp, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
