@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -12,7 +12,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { Copy, Crown, Check, Users } from 'lucide-react-native';
+import { Copy, Crown, Check, Users, Share2, Gamepad2, X } from 'lucide-react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 type RoomData = {
