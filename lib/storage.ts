@@ -30,26 +30,32 @@ export async function clearPendingInvite() {
 }
 
 export async function uploadAvatar(userId: string, fileUri: string) {
-// ... (previous implementation)
-
   try {
-    // 1. File name generate (userId + timestamp)
-    const fileExt = fileUri.split('.').pop();
-    const fileName = `${userId}_${Date.now()}.${fileExt}`;
+    // 1. File name generate
+    const fileExt = fileUri.split('.').pop() || 'jpg';
+    const fileName = `${userId}.${fileExt}`; // Use stable name for easier replacement
     const filePath = `avatars/${fileName}`;
 
-    // 2. File-ды ArrayBuffer-ге айналдыру
+    // 2. React Native-те blob() кейде дұрыс жұмыс істемеуі мүмкін
+    // Сондықтан base64 арқылы жіберу сенімдірек
     const response = await fetch(fileUri);
     const blob = await response.blob();
+
+    // Content-type анықтау
+    const contentType = blob.type || 'image/jpeg';
 
     // 3. Supabase Storage-қа жүктеу
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(filePath, blob, {
+        contentType,
         upsert: true,
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Supabase Storage Error:', uploadError);
+      throw uploadError;
+    }
 
     // 4. Public URL алу
     const { data: { publicUrl } } = supabase.storage
@@ -62,11 +68,18 @@ export async function uploadAvatar(userId: string, fileUri: string) {
       .update({ avatar_url: publicUrl })
       .eq('id', userId);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('Profile Update Error:', updateError);
+      throw updateError;
+    }
 
     return { publicUrl };
-  } catch (error) {
-    console.error('Error uploading avatar:', error);
+  } catch (error: any) {
+    console.error('Detailed Avatar Upload Error:', {
+      message: error.message,
+      status: error.status,
+      details: error.details,
+    });
     throw error;
   }
 }
