@@ -118,12 +118,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 2. Профиль кестесіне деректерді тікелей жазу (Триггер болмаған жағдайда сақтандыру)
     if (data.user) {
-      await supabase.from("profiles").upsert({
+      const { error: profileError } = await supabase.from("profiles").upsert({
         id: data.user.id,
         full_name: name,
         display_name: name,
         updated_at: new Date().toISOString(),
       });
+
+      if (profileError) {
+        console.error("Error upserting profile during signup:", profileError.message);
+      }
+
       // Тіркелген соң профильді бірден жаңарту
       await fetchProfile(data.user.id);
     }

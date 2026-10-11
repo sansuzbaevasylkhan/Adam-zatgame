@@ -39,6 +39,8 @@ export default function SignupScreen() {
       const errorMessage = err instanceof Error ? err.message : (typeof err === 'string' ? err : 'An unexpected error occurred');
       setError(errorMessage);
     } else {
+      // Профиль жасалғанша азғантай күтеміз немесе тексеріледі
+      // (signUp ішінде upsert жасалады, бірақ базада репликация болуы мүмкін)
       show(t('signup.success.done'), 'success');
       router.replace('/(tabs)/home');
     }

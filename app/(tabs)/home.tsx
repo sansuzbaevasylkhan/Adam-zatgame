@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, displayName } = useAuth();
   const { t } = useTranslation();
 
   return (
@@ -17,9 +17,9 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>{t('home.greeting')}</Text>
-          <Text style={styles.name}>{profile?.full_name || profile?.display_name || t('home.defaultPlayerName')}</Text>
+          <Text style={styles.name}>{displayName || t('home.defaultPlayerName')}</Text>
         </View>
-        <Avatar name={profile?.full_name || profile?.display_name || 'O'} avatarUrl={profile?.avatar_url} size={44} />
+        <Avatar name={displayName || 'О'} avatarUrl={profile?.avatar_url} size={44} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
